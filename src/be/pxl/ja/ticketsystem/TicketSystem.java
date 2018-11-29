@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Deque;
@@ -143,25 +144,69 @@ public class TicketSystem {
         return users.get(userID);
     }
 
-    public void addEvent(String id, String localDateTime, String name, String description, double price, String locationID) {
+    public void addEvent(String localDateTime, String name, String description, double price, String locationID) {
         BufferedWriter bw = null;
-        Event event = null;
+        String dts = localDateTime;
 
-        events.put(id, event);
+        int year = Integer.parseInt(dts.substring(4,8));
+        int month = Integer.parseInt(dts.substring(2,4));
+        int day = Integer.parseInt(dts.substring(0,2));
+        int hour = Integer.parseInt(dts.substring(8,10));
+        int minutes = Integer.parseInt(dts.substring(10));
+        LocalDateTime time = LocalDateTime.of(year, month, day, hour, minutes);
+
+        Event event = new Event(name, time, description, price);
+
+        try {
+            bw = Files.newBufferedWriter(Paths.get("data\\eventdata.txt"), StandardOpenOption.APPEND);
+            bw.write(event.getId() + ";" + localDateTime + ";" + name + ";" + description + ";" + price + ";" + locationID);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        events.put(event.getId(), event);
     }
 
-    public void addVenue(String id, String name, String street, int streetNumber, int zipCode, String city, int capacity) {
+    public void addVenue(String name, String street, int streetNumber, String zipCode, String city, int capacity) {
         BufferedWriter bw = null;
-        Venue venue = null;
-
-        venues.put(id, venue);
+        Venue venue = new Venue(name, street, zipCode, city, capacity);
+        try {
+            bw = Files.newBufferedWriter(Paths.get("data\\venuedata.txt"), StandardOpenOption.APPEND);
+            bw.write(venue.getId() + ";" + name + ";" + street + ";" + streetNumber + ";" + zipCode + ";" + city + ";" + capacity);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        venues.put(venue.getId(), venue);
     }
 
-    public void addUser(String id, String name, String firstName, String birthDay) {
+    public void addUser(String name, String firstName, String birthDay) {
         BufferedWriter bw = null;
-        User user = null;
-
-        users.put(id, user);
+        LocalDate birthDayy = LocalDate.of(Integer.parseInt(birthDay.substring(4)), Integer.parseInt(birthDay.substring(2,4)), Integer.parseInt(birthDay.substring(0,2)));
+        User user = new User(name, firstName, birthDayy);
+        try {
+            bw = Files.newBufferedWriter(Paths.get("data\\userdata.txt"), StandardOpenOption.APPEND);
+            bw.write(user.getId() + ";" + user.getLastname() + ";" + user.getFirstname() + ";" + birthDay);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        users.put(user.getId(), user);
     }
 
 }
