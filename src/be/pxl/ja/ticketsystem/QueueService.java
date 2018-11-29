@@ -4,31 +4,11 @@ import java.util.*;
 
 public class QueueService {
 
-
-    // lijst van wachtrijen
-
-    // een voor elk event
-
-    //dus voor Event
-
-
-
-
-
     private HashMap<Integer, Deque<User>> events;
 
     public QueueService() {
         events = new HashMap<>();
     }
-
-//    public QueueService(int eventID, User event) {
-//        events = new HashMap<>();
-//        if (events.containsKey(eventID)) {
-//            System.out.println("This event is already registered.");
-//        } else {
-//            events.put(eventID, (Deque<User>) event);
-//        }
-//    }
 
     public void addToQueue(int eventID, User user) {
         if (!events.containsKey(eventID)) {

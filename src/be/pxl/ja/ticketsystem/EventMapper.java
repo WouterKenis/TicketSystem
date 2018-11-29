@@ -31,8 +31,13 @@ public class EventMapper implements Mapper<Event> {
         if (data[3] != null)
             event.setDescription(data[3]);
 
-        event.setPrice(Double.parseDouble(data[4]));
-        event.setVenue(ticketSystem.getVenue(data[5]));
+        if (data[4] != null)
+            event.setPrice(Double.parseDouble(data[4]));
+        else
+            event.setPrice(0);
+
+        if (data[5] != null)
+            event.setVenue(ticketSystem.getVenue(data[5]));
 
         return event;
     }

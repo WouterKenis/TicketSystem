@@ -1,11 +1,13 @@
 package be.pxl.ja.ticketsystem;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Deque;
 import java.util.HashMap;
 
 public class TicketSystem {
@@ -21,6 +23,16 @@ public class TicketSystem {
         users = GetAllUsers();
         events = GetAllEvents();
 
+    }
+
+    public void assignTickets(int eventID, int number) {
+        Deque<User> users = queueService.getQueue(eventID);
+
+        for (int i = 1; i <= number; i++) {
+            users.removeLast();
+
+
+        }
     }
 
     public HashMap<String, User> GetAllUsers() {
@@ -131,5 +143,25 @@ public class TicketSystem {
         return users.get(userID);
     }
 
+    public void addEvent(String id, String localDateTime, String name, String description, double price, String locationID) {
+        BufferedWriter bw = null;
+        Event event = null;
+
+        events.put(id, event);
+    }
+
+    public void addVenue(String id, String name, String street, int streetNumber, int zipCode, String city, int capacity) {
+        BufferedWriter bw = null;
+        Venue venue = null;
+
+        venues.put(id, venue);
+    }
+
+    public void addUser(String id, String name, String firstName, String birthDay) {
+        BufferedWriter bw = null;
+        User user = null;
+
+        users.put(id, user);
+    }
 
 }
