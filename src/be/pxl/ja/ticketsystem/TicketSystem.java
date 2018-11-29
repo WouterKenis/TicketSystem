@@ -31,8 +31,6 @@ public class TicketSystem {
 
         for (int i = 1; i <= number; i++) {
             users.removeLast();
-
-
         }
     }
 
@@ -145,17 +143,20 @@ public class TicketSystem {
     }
 
     public void addEvent(String localDateTime, String name, String description, double price, String locationID) {
-        BufferedWriter bw = null;
-        String dts = localDateTime;
 
+        BufferedWriter bw = null;
+
+        String dts = localDateTime;
         int year = Integer.parseInt(dts.substring(4,8));
         int month = Integer.parseInt(dts.substring(2,4));
         int day = Integer.parseInt(dts.substring(0,2));
         int hour = Integer.parseInt(dts.substring(8,10));
         int minutes = Integer.parseInt(dts.substring(10));
+
         LocalDateTime time = LocalDateTime.of(year, month, day, hour, minutes);
 
         Event event = new Event(name, time, description, price);
+        event.setVenue(getVenue(locationID));
 
         try {
             bw = Files.newBufferedWriter(Paths.get("data\\eventdata.txt"), StandardOpenOption.APPEND);
