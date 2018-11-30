@@ -4,142 +4,105 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
+import java.util.List;
 
 public class TicketSystem {
 
     private QueueService queueService;
-    private HashMap<String, User> users;
-    private HashMap<String, Event> events;
-    private HashMap<String, Venue> venues;
+    private List<User> users;
+    private List<Event> events;
+    private List<Venue> venues;
 
     public TicketSystem(QueueService queueService) {
         this.queueService = queueService;
-        venues = GetAllVenues();
-        users = GetAllUsers();
-        events = GetAllEvents();
-
+        loadVenues();
+        loadEvents();
+        loadUsers();
     }
 
-    public void assignTickets(int eventID, int number) {
+    public void assignTickets(String eventID, int number) {
         Deque<User> users = queueService.getQueue(eventID);
-
+        if (number > queueService.getQueueSize(eventID)) {
+            System.out.println("Number of tickets is greater than the queue count. Emptying queue...");
+            number = queueService.getQueueSize(eventID);
+        }
         for (int i = 1; i <= number; i++) {
-            users.removeLast();
+            users.removeFirst();
         }
     }
 
-    public HashMap<String, User> GetAllUsers() {
-        this.users = new HashMap<>();
-        UserMapper userMapper = new UserMapper();
 
-        BufferedReader br = null;
+    private <T> List<T> loadData(Path path, Mapper<T> mapper) {
 
-        try {
-            br = Files.newBufferedReader(Paths.get("data\\userdata.txt"));
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
+        List<T> data = new ArrayList<>();
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
 
-        String line;
-        try {
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(";");
-                users.put(data[0], userMapper.map(data));
+                data.add(mapper.map(line.split(";")));
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                br.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
-        return users;
+        return data;
     }
 
-    public HashMap<String, Event> GetAllEvents() {
-        this.events = new HashMap<>();
-        EventMapper eventMapper = new EventMapper(this);
-
-        BufferedReader br = null;
-
-        try {
-            br = Files.newBufferedReader(Paths.get("data\\eventdata.txt"));
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-
-        String line;
-        try {
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(";");
-                events.put(data[0], eventMapper.map(data));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                br.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return events;
+    private void loadUsers() {
+        users = loadData(Paths.get("data/userdata.txt"), new UserMapper());
     }
 
-    public HashMap<String, Venue> GetAllVenues() {
-        this.venues = new HashMap<>();
-        VenueMapper venueMapper = new VenueMapper();
+    private void loadVenues() {
+        venues = loadData(Paths.get("data/venuedata.txt"), new VenueMapper());
+    }
 
-        BufferedReader br = null;
-
-        try {
-            br = Files.newBufferedReader(Paths.get("data\\venuedata.txt"));
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-
-        String line;
-        try {
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(";");
-                venues.put(data[0], venueMapper.map(data));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                br.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return venues;
+    private void loadEvents() {
+        events = loadData(Paths.get("data/eventdata.txt"), new EventMapper(this));
     }
 
     public void requestTicket(Event event, User user) {
-        queueService.addToQueue(Integer.parseInt(event.getId()), user);
+        queueService.addToQueue(event.getId(), user);
     }
 
-    public void viewNext(int eventID) {
-        System.out.println("Next in line for event (ID: " + eventID + ")" + queueService.getNextInLine(eventID));
+    public void viewNext(String eventID) {
+        if (queueService.getNextInLine(eventID) == null) ;
+        else {
+            User nextUserInLine = queueService.getNextInLine(eventID);
+            System.out.println("Next in line for event (ID: " + eventID + ")" + ": " + nextUserInLine.getFirstname() + " " + nextUserInLine.getLastname());
+        }
     }
 
     public Event getEvent(String eventID) {
-        return events.get(eventID);
+        for (Event e : events) {
+            if (e.getId().equalsIgnoreCase(eventID)) {
+                return e;
+            }
+        }
+        return null;
     }
+
     public Venue getVenue(String venueID) {
-        return venues.get(venueID);
+        for (Venue v : venues) {
+            if (v.getId().equalsIgnoreCase(venueID)) {
+                return v;
+            }
+        }
+        return null;
     }
+
     public User getUser(String userID) {
-        return users.get(userID);
+        for (User u : users) {
+            if (u.getId().equalsIgnoreCase(userID)) {
+                return u;
+            }
+        }
+        return null;
     }
 
     public void addEvent(String localDateTime, String name, String description, double price, String locationID) {
@@ -147,10 +110,10 @@ public class TicketSystem {
         BufferedWriter bw = null;
 
         String dts = localDateTime;
-        int year = Integer.parseInt(dts.substring(4,8));
-        int month = Integer.parseInt(dts.substring(2,4));
-        int day = Integer.parseInt(dts.substring(0,2));
-        int hour = Integer.parseInt(dts.substring(8,10));
+        int year = Integer.parseInt(dts.substring(4, 8));
+        int month = Integer.parseInt(dts.substring(2, 4));
+        int day = Integer.parseInt(dts.substring(0, 2));
+        int hour = Integer.parseInt(dts.substring(8, 10));
         int minutes = Integer.parseInt(dts.substring(10));
 
         LocalDateTime time = LocalDateTime.of(year, month, day, hour, minutes);
@@ -170,7 +133,7 @@ public class TicketSystem {
                 e.printStackTrace();
             }
         }
-        events.put(event.getId(), event);
+        events.add(event);
     }
 
     public void addVenue(String name, String street, int streetNumber, String zipCode, String city, int capacity) {
@@ -188,12 +151,12 @@ public class TicketSystem {
                 e.printStackTrace();
             }
         }
-        venues.put(venue.getId(), venue);
+        venues.add(venue);
     }
 
     public void addUser(String name, String firstName, String birthDay) {
         BufferedWriter bw = null;
-        LocalDate birthDayy = LocalDate.of(Integer.parseInt(birthDay.substring(4)), Integer.parseInt(birthDay.substring(2,4)), Integer.parseInt(birthDay.substring(0,2)));
+        LocalDate birthDayy = LocalDate.of(Integer.parseInt(birthDay.substring(4)), Integer.parseInt(birthDay.substring(2, 4)), Integer.parseInt(birthDay.substring(0, 2)));
         User user = new User(name, firstName, birthDayy);
         try {
             bw = Files.newBufferedWriter(Paths.get("data\\userdata.txt"), StandardOpenOption.APPEND);
@@ -207,7 +170,7 @@ public class TicketSystem {
                 e.printStackTrace();
             }
         }
-        users.put(user.getId(), user);
+        users.add(user);
     }
 
 }

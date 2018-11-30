@@ -4,13 +4,14 @@ import java.util.*;
 
 public class QueueService {
 
-    private HashMap<Integer, Deque<User>> events;
+    private HashMap<String, Deque<User>> events;
+
 
     public QueueService() {
         events = new HashMap<>();
     }
 
-    public void addToQueue(int eventID, User user) {
+    public void addToQueue(String eventID, User user) {
         if (!events.containsKey(eventID)) {
             Deque<User> deque = new ArrayDeque<>();
             deque.add(user);
@@ -21,25 +22,34 @@ public class QueueService {
         }
     }
 
-    public Deque<User> getQueue(int eventID) {
+    public Deque<User> getQueue(String eventID) {
         return events.get(eventID);
     }
 
-    public User getNextInLine(int eventID) {
-        return events.get(eventID).peekLast();
+    public User getNextInLine(String eventID) {
+        if (events.get(eventID).peekFirst() == null) {
+            System.out.println("Queue is empty.");
+        } else {
+            return events.get(eventID).peekFirst();
+        }
+        return null;
     }
 
-    public void removeFromQueue(int eventID) {
-        events.remove(eventID).removeLast();
+    public void removeFromQueue(String eventID) {
+        events.get(eventID).removeFirst();
     }
 
-    public void printQueue(int eventID) {
-        for (User user : events.get(eventID)) {
-            System.out.println("ID: " + user.getId() + " - Firstname: " + user.getFirstname() + " Lastname: " + user.getLastname());
+    public void printQueue(String eventID) {
+        if (getQueueSize(eventID) == 0) {
+            System.out.println("Queue is empty.");
+        } else {
+            for (User user : events.get(eventID)) {
+                System.out.println("ID: " + user.getId() + " - Firstname: " + user.getFirstname() + " Lastname: " + user.getLastname());
+            }
         }
     }
 
-    public int getQueueSize(int eventID) {
+    public int getQueueSize(String eventID) {
         return events.get(eventID).size();
     }
 }
