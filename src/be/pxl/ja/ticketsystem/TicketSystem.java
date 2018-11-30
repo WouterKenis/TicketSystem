@@ -29,9 +29,9 @@ public class TicketSystem {
 
     public void assignTickets(String eventID, int number) {
         Deque<User> users = queueService.getQueue(eventID);
-        if (number > queueService.getQueueSize(eventID)) {
+        if (number > users.size()) {
             System.out.println("Number of tickets is greater than the queue count. Emptying queue...");
-            number = queueService.getQueueSize(eventID);
+            number = users.size();
         }
         for (int i = 1; i <= number; i++) {
             users.removeFirst();
